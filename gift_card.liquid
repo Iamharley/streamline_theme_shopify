@@ -1,73 +1,93 @@
-<!doctype html>
-<html class="no-js" lang="{{ request.locale.iso_code }}">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="{{ settings.color_button }}">
-  <link rel="canonical" href="{{ canonical_url }}">
+{% layout 'gift_card' %}
 
-  {%- if settings.favicon != blank -%}
-    <link rel="shortcut icon" href="{{ settings.favicon | img_url: '32x32' }}" type="image/png" />
-  {%- endif -%}
+{%- assign formatted_initial_value = gift_card.initial_value | money_without_trailing_zeros: gift_card.currency -%}
 
-  {%- assign formatted_initial_value = gift_card.initial_value | money_without_trailing_zeros: gift_card.currency -%}
-  {%- assign formatted_initial_value_stripped = formatted_initial_value | strip_html -%}
-  <title>{{ 'gift_cards.issued.title_html' | t: value: formatted_initial_value_stripped, shop: shop.name }}</title>
+<div class="giftcard__border{% if gift_card.expired or gift_card.enabled != true %} disabled{% endif %}">
+  <div class="giftcard__content">
 
-  <meta name="description" content="{{ 'gift_cards.issued.subtext' | t }}">
+    <div class="giftcard__header">
+      <h2 class="h4 giftcard__title">{{ 'gift_cards.issued.subtext' | t }}</h2>
+      {%- unless gift_card.enabled -%}
+        <span class="giftcard__tag">{{ 'gift_cards.issued.disabled' | t }}</span>
+      {%- endunless -%}
+      {%- assign gift_card_expiry_date = gift_card.expires_on | date: "%d/%m/%y" -%}
+      {%- if gift_card.expired and gift_card.enabled -%}
+         <span class="giftcard__tag">{{ 'gift_cards.issued.expired' | t: expiry: gift_card_expiry_date }}</span>
+      {%- endif -%}
+      {%- if gift_card.expired != true and gift_card.expires_on and gift_card.enabl-ed %}
+        <span class="giftcard__tag giftcard__tag--active">{{ 'gift_cards.issued.active' | t: expiry: gift_card_expiry_date }}</span>
+      {%- endif -%}
+    </div>
 
-  {%- render 'social-meta-tags' -%}
+    <div class="giftcard__wrap">
+      {%- render 'image-element',
+        asset: 'gift-card/card.jpg',
+        type: 'asset',
+        alt: 'Gift card illustration',
+        sizeVariable: '588px',
+      -%}
 
-  {{ content_for_header }}
-
-  {%- render 'css-variables' -%}
-  {%- render 'critical-css' -%}
-  {{ 'theme.css' | asset_url | stylesheet_tag: preload: true }}
-
-  <script>
-    document.documentElement.className = document.documentElement.className.replace('no-js', 'js');
-
-    window.theme = window.theme || {};
-    theme.settings = {
-      themeVersion: "7.0.0"
-    };
-  </script>
-
-  <script src="{{ 'vendor-v6.js' | asset_url | split: '?' | first }}" defer="defer"></script>
-  {{ 'vendor/qrcode.js' | shopify_asset_url | script_tag }}
-</head>
-
-<body class="template-giftcard" data-transitions="{{settings.animate_page_transitions}}" data-animate_underlines="true" data-animate_images="{{settings.animate_images}}" data-button_style="{{settings.button_style}}" data-type_product_capitalize="{{settings.type_product_capitalize}}" data-type_header_capitalize="{{settings.type_header_capitalize}}" data-product_image_scatter="{{settings.product_image_scatter}}" data-button_type_style="{{settings.button_type_style}}">
-
-  <div id="PageContainer">
-
-    <div class="page-width">
-
-      {%- section 'giftcard-header' -%}
-
-      <main class="giftcard" role="main">
-        {{ content_for_layout }}
-      </main>
-
-      <footer class="giftcard__footer">
-        {%- if gift_card.pass_url -%}
-          <a class="add-to-apple-wallet" href="{{ gift_card.pass_url }}">
-            {% assign alt_text = 'gift_cards.issued.add_to_apple_wallet' | t %}
-            {%- render 'image-element',
-              asset: 'gift-card/add-to-apple-wallet.svg',
-              type: 'asset',
-              img_width: 120,
-              img_height: 40,
-              alt: alt_text,
-              sizes: '120px',
-            -%}
-          </a>
+      {%- assign initial_value_size = formatted_initial_value | size -%}
+      <div class="h1 giftcard__amount{% if initial_value_size > 6 %} giftcard__amount--medium{% endif %}">
+        {%- if gift_card.balance != gift_card.initial_value -%}
+          <span class="tooltip">
+            <span class="tooltip__label">{{ gift_card.balance | money }} <small>left</small></span>
+          </span>
         {%- endif -%}
-      </footer>
+        <strong>{{ formatted_initial_value }}</strong>
+      </div>
+
+      {%- assign code_size = gift_card.code | format_code | size -%}
+      <div class="giftcard__code{% if code_size <= 25 %} giftcard__code--large{% elsif code_size > 25 and code_size <= 30 %} giftcard__code--medium{% else %} giftcard__code--small{% endif %}" onclick="selectText('GiftCardDigits');">
+        <div class="giftcard__code__inner">
+          <strong class="giftcard__code__text" id="GiftCardDigits">{{ gift_card.code | format_code }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <p class="giftcard__instructions">
+      {{ 'gift_cards.issued.redeem' | t }}
+    </p>
+
+    <div id="QrCode"></div>
+    <script>
+      new QRCode(document.getElementById('QrCode'), {
+        text: "{{ gift_card.qr_identifier }}",
+        width: 120,
+        height: 120
+      });
+    </script>
+
+    <div class="giftcard__actions">
+      <a href="{{ shop.url }}" class="btn" target="_blank">{{ 'gift_cards.issued.shop_link' | t }}</a>
+      <a href="#" class="action-link" onclick="window.print();">
+        <i class="action-link__print"></i>{{ 'gift_cards.issued.print' | t }}
+      </a>
     </div>
 
   </div>
+</div>
 
-</body>
+<script>
+  /*============================================================================
+    Auto-select gift card code on click, based on ID passed to the function
+      - Use a different method depending on IE or others
+  ==============================================================================*/
+  function selectText(element) {
+    var doc = document,
+        text = doc.getElementById(element);
+
+    if (doc.body.createTextRange) { // ms
+      var range = doc.body.createTextRange();
+      range.moveToElementText(text);
+      range.select();
+    } else if (window.getSelection) { // moz, opera, webkit
+      var selection = window.getSelection(),
+          range = doc.createRange();
+      range.selectNodeContents(text);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }
+</script>
 </html>
