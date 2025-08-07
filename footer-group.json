@@ -1,0 +1,24 @@
+{
+  "type": "footer",
+  "name": "t:sections.footer-group.name",
+  "sections": {
+    "social": {
+      "type": "social",
+      "disabled": true,
+      "settings": {
+        "enable_collection": false
+      }
+    },
+    "footer": {
+      "type": "footer",
+      "settings": {
+        "newsletter_title": "Join the core club",
+        "newsletter_richtext": "<p>Subscribe to our newsletter and get exclusive promotions directly to your inbox.</p>",
+        "menu": "footer",
+        "show_payment_icons": true,
+        "show_copyright": true
+      }
+    }
+  },
+  "order": ["social", "footer"]
+}

@@ -1,0 +1,23 @@
+{
+  "type": "header",
+  "name": "t:sections.header-group.name",
+  "sections": {
+    "announcement-bar": {
+      "type": "announcement-bar",
+      "settings": {
+        "show_announcement_home_only": false
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        "sticky_index": true,
+        "sticky_collection": true,
+        "header_search_enable": true,
+        "desktop_logo_width": 80,
+        "mobile_logo_width": 60
+      }
+    }
+  },
+  "order": ["announcement-bar", "header"]
+}
